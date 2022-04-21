@@ -41,6 +41,7 @@ settingsfile = 'settings.pk'
 
 def RunAnalysis():
     ExcelLoader.LoadExcelFilesFromFolder(currentDir)
+    pass
 
 def chooseDir(initDir):
     chosenDir = filedialog.askdirectory(initialdir=initDir)

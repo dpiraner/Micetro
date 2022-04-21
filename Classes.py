@@ -37,4 +37,8 @@ class Cage:
         self.ID = ''
         self.Mice = []
         
-        
+class ExcelSheet:
+    def __init__(self, path, date):
+        self.Path = path
+        self.Date = date
+        self.DataFrame = None
