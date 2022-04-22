@@ -43,10 +43,17 @@ settingsfile = 'settings.pk'
 
 
 def RunAnalysis():
+    experiment = Classes.Experiment()
+    Auxil.LoadExperimentInfo(experiment, currentDir)
     measurements = ExcelLoader.LoadExcelFilesFromFolder(currentDir)
-    experiment = ExcelLoader.ParseExcelMeasurements(measurements)
+    if experiment.StartDate == None:
+        experiment.StartDate = measurements[0].Date
+    experiment = ExcelLoader.ParseExcelMeasurements(measurements, experiment)
     
     print("Loaded experiment with " + str(len(experiment.Mice))  + " mice distributed among " + str(len(experiment.Groups)) + " groups in " + str(len(experiment.Cages)) + " cages.")
+    print("First measurement: " + str(measurements[0].Date))
+    print("Starting measurements from " + str(experiment.StartDate) + " (Chosen from parameter: " + str(experiment.StartFrom) + ")")
+    
     
 def chooseDir(initDir):
     chosenDir = filedialog.askdirectory(initialdir=initDir)

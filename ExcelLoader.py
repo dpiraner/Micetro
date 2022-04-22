@@ -6,7 +6,6 @@ Created on Thu Apr 21 13:58:36 2022
 """
 
 import glob, os
-import datetime
 import pandas as pd
 from Classes import ExcelSheet, Experiment, TumorTimePoint, OtherMeasurementTimePoint
 import Auxil
@@ -19,27 +18,13 @@ def LoadExcelFilesFromFolder(currentDir):
     for file in glob.glob("*.xlsx"):
         fileName = Path(file).stem
         splitName = fileName.split(' ')
-        if len(splitName) >=3:
-            
-            year = -1
-            month = -1
-            day = -1
-            
-            if (len(splitName[0]) == 4) and (splitName[0].isdigit() == True):
-                year = int(splitName[0])
-                
-            if (len(splitName[1]) == 2) and (splitName[1].isdigit() == True):
-                month = int(splitName[1])
-            
-            if (len(splitName[2]) == 2) and (splitName[2].isdigit() == True):
-                day = int(splitName[2])
-              
-            if (year >= 0 and month >= 0 and day >= 0):
-                measurementDate = datetime.datetime(year, month, day)
-                measurementFile = ExcelSheet(file, measurementDate)
+        fileDate = Auxil.StrArrayToDate(splitName)
+        if fileDate != None:
+                measurementFile = ExcelSheet(file, fileDate)
                 measurementFile.DataFrame = pd.read_excel (file)
                 measurementFiles.append(measurementFile)
-        
+    
+    measurementFiles.sort(key = lambda x: x.Date)
     return measurementFiles
 
 
@@ -54,8 +39,7 @@ class OtherDataLocation:
         self.Name = name
         self.Column = column
 
-def ParseExcelMeasurements(measurements):
-    experiment = Experiment()
+def ParseExcelMeasurements(measurements, experiment):
     for measurementSession in measurements:
         print("Parsing measurements from " + str(measurementSession.Date))
         df = measurementSession.DataFrame
@@ -115,14 +99,14 @@ def ParseExcelMeasurements(measurements):
                 
             for tumorData in cols_Tumors:
                 tumor = Auxil.GetOrCreateTumor(mouse, tumorData.Name)
-                timepoint = TumorTimePoint(measurementSession.Date)
+                timepoint = TumorTimePoint(measurementSession.Date, experiment.StartDate)
                 timepoint.Axis1 = row[tumorData.Col_Ax1]
                 timepoint.Axis2 = row[tumorData.Col_Ax2]
                 tumor.TimePoints.append(timepoint)
             
             for otherData in cols_Others:
                 otherMeasurement = Auxil.GetOrCreateOtherMeasurement(mouse, otherData.Name)
-                timepoint = OtherMeasurementTimePoint(measurementSession.Date, row[otherData.Column])
+                timepoint = OtherMeasurementTimePoint(measurementSession.Date, experiment.StartDate, row[otherData.Column])
                 otherMeasurement.TimePoints.append(timepoint)
                 
     return experiment

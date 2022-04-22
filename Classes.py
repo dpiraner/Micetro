@@ -11,9 +11,9 @@ class Tumor:
         self.TimePoints = []
         
 class TumorTimePoint:
-            def __init__(self, date):
+            def __init__(self, date, startDate):
                 self.Date = date
-                self.Elapsed = 0
+                self.Elapsed = date - startDate
                 self.Axis1 = None
                 self.Axis2 = None
 
@@ -23,9 +23,9 @@ class OtherMeasurement:
         self.TimePoints = []
         
 class OtherMeasurementTimePoint:
-            def __init__(self, date, value):
+            def __init__(self, date, startDate, value):
                 self.Date = date
-                self.Elapsed = 0
+                self.Elapsed = date - startDate
                 self.Value = value
         
 class Mouse:
@@ -60,3 +60,7 @@ class Experiment:
         self.Mice = []
         self.Groups = []
         self.Cages = []
+        self.ChallengeDate = None
+        self.TreatmentDate = None
+        self.StartFrom = "treatment"
+        self.StartDate = None
