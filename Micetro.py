@@ -32,6 +32,9 @@ from functools import partial
 
 import ExcelLoader
 
+import Auxil
+import Classes
+
 #create settings
 settings = {
     'initDir': ""
@@ -40,9 +43,11 @@ settingsfile = 'settings.pk'
 
 
 def RunAnalysis():
-    ExcelLoader.LoadExcelFilesFromFolder(currentDir)
-    pass
-
+    measurements = ExcelLoader.LoadExcelFilesFromFolder(currentDir)
+    experiment = ExcelLoader.ParseExcelMeasurements(measurements)
+    
+    print("Loaded experiment with " + str(len(experiment.Mice))  + " mice distributed among " + str(len(experiment.Groups)) + " groups in " + str(len(experiment.Cages)) + " cages.")
+    
 def chooseDir(initDir):
     chosenDir = filedialog.askdirectory(initialdir=initDir)
     
@@ -85,7 +90,7 @@ window.wm_title('Micetro')
 
 loadFromLastDir = partial(chooseDir, settings['initDir']) 
 button_getFolder = tk.Button(window,
-                        text = "Load File", fg='white', bg='black',
+                        text = "Select Directory", fg='white', bg='black',
                         command = loadFromLastDir)  
 
 canvas1.create_window(50, 80, window=button_getFolder)
