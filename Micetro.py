@@ -31,13 +31,17 @@ import os
 from functools import partial
 
 import ExcelLoader
-
+import ExcelPlotter
+import DataSelector
 import Auxil
 import Classes
 
 #create settings
 settings = {
-    'initDir': ""
+    'initDir': "",
+    'errorType': "SEM",
+    'metricType': "Formula",
+    'tumorVolumeFormula': "(L x W^2) / 2"
     }
 settingsfile = 'settings.pk'   
 
@@ -54,6 +58,11 @@ def RunAnalysis():
     print("First measurement: " + str(measurements[0].Date))
     print("Starting measurements from " + str(experiment.StartDate) + " (Chosen from parameter: " + str(experiment.StartFrom) + ")")
     
+    experiment.Groups.sort(key = lambda x: x.Label)
+    
+    DataSelector.ComputeTumorVolumes(experiment, settings['tumorVolumeFormula'])
+    debug = ExcelPlotter.PlotExperiment(experiment)
+    print("Analyses complete!")
     
 def chooseDir(initDir):
     chosenDir = filedialog.askdirectory(initialdir=initDir)

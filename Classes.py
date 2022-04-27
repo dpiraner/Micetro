@@ -16,6 +16,7 @@ class TumorTimePoint:
                 self.Elapsed = date - startDate
                 self.Axis1 = None
                 self.Axis2 = None
+                self.Volume = None
 
 class OtherMeasurement:
     def __init__(self, label):
