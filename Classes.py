@@ -70,3 +70,5 @@ class Experiment:
         self.StartFrom = "treatment"
         self.StartDate = None
         self.EndDate = None
+        self.MeasurementDates = []
+        self.MeasurementElapsedDays = []

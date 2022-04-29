@@ -11,17 +11,17 @@ from datetime import datetime
 import DataSelector
 import math
 
-def PlotExperiment(experiment):
+def PlotExperiment(experiment, settings):
     outputName = "Micetro Output " + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") + '.xlsx'
     tumorLabels = DataSelector.GetTumorLabels(experiment)
     workbook = xlsxwriter.Workbook(outputName)
 
-    debug = PlotTumors(experiment, workbook)
+    debug = PlotTumors(experiment, workbook, settings['errorType'])
     
     workbook.close()
     return debug
 
-def PlotTumors(experiment, workbook):
+def PlotTumors(experiment, workbook, errorMode):
         tumorLabels = DataSelector.GetTumorLabels(experiment)
         #iterate through tumors
         for tumorLabel in tumorLabels:
@@ -38,6 +38,11 @@ def PlotTumors(experiment, workbook):
             maxX = (experiment.EndDate - experiment.StartDate).days
             maxY = DataSelector.GetMaxTumorMeasurement(experiment, tumorLabel)
             PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, GetCategoryLengths(experiment.Groups), GetGroupNames(experiment.Groups), 'scatter', "Day", "Tumor volume (mm3)", "Group ", maxX, maxY)
+        
+            #get and plot tumor averages
+            averagesAndErrors = DataSelector.GetTumorAveragesByGroup(experiment, tumorLabel, errorMode)
+            dbg = True
+        
         return rawMeasurements
 
 
@@ -75,6 +80,13 @@ def RoundOrdinateAxisMax(x):
     else:
         return int(math.ceil(x / 1000.0)) * 1000
         
+def WriteAveragesAndErrorsByValue(workbook, worksheet, experiment, headerRow, startRow, startColumn, abscissaColumn, dataStartColumn, dataEndColumn, categoryLengths, categoryNames):
+    xlRow = startRow
+    xlColumn = startColumn
+    rowMax = startRow
+    colMax = startColumn
+    
+    
 
 def PlotChartsFromRawData(workbook, worksheet, headerRow, dataStartRow, dataEndRow, abscissaColumn, dataStartColumn, dataEndColumn, categoryLengths, categoryNames, chartType, xName, yName, titlePrefix, maxX, maxY): # designed to be arbitrary between groups and cages. categoryLengths = number of mice in each group or cage
     
@@ -98,36 +110,7 @@ def PlotChartsFromRawData(workbook, worksheet, headerRow, dataStartRow, dataEndR
         
         chart.set_size({'width': chartWidth})
         
-        chart.set_x_axis({
-                'name': xName, 
-                'name_font': {'name': 'arial', 'size': 11, 'bold': False}, 
-                'num_font': {'name': 'arial', 'size': 11},
-                'min': 0,
-                'max': maxX
-                })
-        
-        chart.set_y_axis({
-            'name': yName, 
-            'name_font': {'name': 'arial', 'size': 11, 'bold': False}, 
-            'num_font': {'name': 'arial', 'size': 11},
-            'major_gridlines': {'visible': False}, 
-            'min': 0
-            })
-        
-        chart.set_title({
-            'name': titlePrefix + category,
-            'name_font': {'name': 'arial', 'size': 14, 'bold': False}
-            })
-        
-        if maxY is not None:
-            chart.set_y_axis({
-                'name': yName, 
-                'name_font': {'name': 'arial', 'size': 11, 'bold': False}, 
-                'num_font': {'name': 'arial', 'size': 11},
-                'major_gridlines': {'visible': False}, 
-                'min': 0, 
-                'max': RoundOrdinateAxisMax(maxY)
-                })
+        FormatStandardChart(chart, titlePrefix + category, xName, yName, maxX, maxY)
         
         #add series for each mouse in group or cage
         for j in range(categoryLengths[i]):
@@ -148,3 +131,39 @@ def PlotChartsFromRawData(workbook, worksheet, headerRow, dataStartRow, dataEndR
         worksheet.insert_chart(dataEndRow + 1, categoryStartColumn, chart)
     return
 
+
+
+def FormatStandardChart(chart, title, xName, yName, maxX, maxY):
+    chart.set_title({
+        'name': title,
+        'name_font': {'name': 'arial', 'size': 14, 'bold': False}
+        })
+        
+    chart.set_x_axis({
+            'name': xName, 
+            'name_font': {'name': 'arial', 'size': 11, 'bold': False}, 
+            'num_font': {'name': 'arial', 'size': 11},
+            'min': 0,
+            'max': maxX
+            })
+    
+    if maxY is not None:
+        chart.set_y_axis({
+            'name': yName, 
+            'name_font': {'name': 'arial', 'size': 11, 'bold': False}, 
+            'num_font': {'name': 'arial', 'size': 11},
+            'major_gridlines': {'visible': False}, 
+            'min': 0, 
+            'max': RoundOrdinateAxisMax(maxY)
+            })
+    else:
+        chart.set_y_axis({
+            'name': yName, 
+            'name_font': {'name': 'arial', 'size': 11, 'bold': False}, 
+            'num_font': {'name': 'arial', 'size': 11},
+            'major_gridlines': {'visible': False}, 
+            'min': 0
+            })
+    return
+        
+        

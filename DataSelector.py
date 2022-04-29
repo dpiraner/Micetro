@@ -7,6 +7,9 @@ Created on Mon Apr 25 19:39:45 2022
 
 import math
 import Auxil
+import statistics
+from scipy import mean
+from scipy.stats import sem
 
 def GetTumorLabels(experiment):
     tumorLabels = []
@@ -70,7 +73,6 @@ def GetTumorMeasurementAtTimePoint(tumor, timePoint):
     return None
 
 def GetTumorMeasurementsByGroup(experiment, tumorLabel):
-    
     rows = []
     
     timePoints, elapsed = GetTumorTimepoints(experiment, tumorLabel)
@@ -85,10 +87,11 @@ def GetTumorMeasurementsByGroup(experiment, tumorLabel):
         for group in experiment.Groups:
             for mouse in group.Mice:
                 for tumor in mouse.Tumors:
-                    volume = GetTumorMeasurementAtTimePoint(tumor, timePoints[i])
-                    measurementRow.append(volume)
-                    if volume is not None:
-                        hasValues = True
+                    if tumor.Label == tumorLabel:
+                        volume = GetTumorMeasurementAtTimePoint(tumor, timePoints[i])
+                        measurementRow.append(volume)
+                        if volume is not None:
+                            hasValues = True
         if hasValues == True: #if any values were not None                
             rows.append(measurementRow)
     return rows
@@ -102,3 +105,42 @@ def GetMaxTumorMeasurement(experiment, tumorLabel):
                     if tp.Volume is not None and tp.Volume > maxVol:
                         maxVol = tp.Volume
     return maxVol    
+
+def GetTumorAveragesByGroup(experiment, tumorLabel, errorMode):
+    rows = []
+    
+    timePoints, elapsed = GetTumorTimepoints(experiment, tumorLabel)
+    
+    header = ["Measurement Date", "Elapsed Time"]
+    for group in experiment.Groups:
+        header.append(group.Label)
+    for group in experiment.Groups:
+        header.append(errorMode + " " + str(group.Label))
+    rows.append(header)
+    
+    for i in range(len(timePoints)):
+        measurementRow = [str(timePoints[i]), elapsed[i]]
+        errorRow = []
+        timePointHasValues = False
+        groupHasValues = False
+        for group in experiment.Groups:
+            currentMeasurements = []
+            for mouse in group.Mice:
+                for tumor in mouse.Tumors:
+                    if tumor.Label == tumorLabel:
+                        volume = GetTumorMeasurementAtTimePoint(tumor, timePoints[i])
+                        if volume is not None:
+                            currentMeasurements.append(volume)
+                            timePointHasValues = True
+                            groupHasValues = True
+            if groupHasValues:
+                 measurementRow.append(mean(currentMeasurements))
+                 if errorMode == "StDev":
+                     errorRow.append(statistics.pstdev(currentMeasurements))
+                 elif errorMode == "SEM":
+                     errorRow.append(sem(currentMeasurements))
+        if timePointHasValues == True: #if any values were not None                
+            rows.append(measurementRow + errorRow)
+    return rows 
+    
+    

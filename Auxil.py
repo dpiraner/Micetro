@@ -34,6 +34,8 @@ def StrArrayToDate(arr):
 
 def LoadExperimentInfo(experiment, currentDir):
     settingsPath = os.path.join(currentDir, "micetro.txt")
+    groupAliases = {}
+    
     if os.path.exists(settingsPath):
         print("Found Micetro settings file.")
         with open(settingsPath) as f:
@@ -58,14 +60,26 @@ def LoadExperimentInfo(experiment, currentDir):
                             experiment.StartFrom = "challenge"
                         else:
                             experiment.StartFrom = 'treatment'
-                            
-                            
+                elif len(stripped) == 3 and stripped[0] == "GroupAlias":
+                    groupAliases[stripped[1]] = stripped[2]
+                
     if experiment.StartFrom == "challenge" and experiment.ChallengeDate != None:
         experiment.StartDate = experiment.ChallengeDate
     elif experiment.StartFrom == "treatment" and experiment.TreatmentDate != None:
         experiment.StartDate = experiment.TreatmentDate
-    return
+    
+    return groupAliases
 
+def AliasGroupLabels(experiment, groupAliases):
+    for group in experiment.Groups:
+        origLabel = str(group.Label) 
+        if origLabel in groupAliases:
+            group.Label = groupAliases[origLabel]
+
+    for mouse in experiment.Mice:
+        origLabel = str(mouse.Group) 
+        if origLabel in groupAliases:
+            mouse.Group = groupAliases[origLabel]
 
 def GetSuperHeaderNames(df):
     prelim = list(df.columns)
@@ -137,9 +151,16 @@ def GetExperimentBoundDates(experiment, excelMeasurements):
             startDate = m.Date
         if m.Date > endDate:
             endDate = m.Date
+        experiment.MeasurementDates.append(m.Date)
     
     if experiment.StartDate == None:
         experiment.StartDate = startDate
     
     experiment.EndDate = endDate
+    
+    experiment.MeasurementDates.sort()
+    for date in experiment.MeasurementDates:
+        elapsed = (date - experiment.StartDate).days
+        experiment.MeasurementElapsedDays.append(elapsed)
+    
     return
