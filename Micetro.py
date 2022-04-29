@@ -50,8 +50,7 @@ def RunAnalysis():
     experiment = Classes.Experiment()
     Auxil.LoadExperimentInfo(experiment, currentDir)
     measurements = ExcelLoader.LoadExcelFilesFromFolder(currentDir)
-    if experiment.StartDate == None:
-        experiment.StartDate = measurements[0].Date
+    Auxil.GetExperimentBoundDates(experiment, measurements) 
     experiment = ExcelLoader.ParseExcelMeasurements(measurements, experiment)
     
     print("Loaded experiment with " + str(len(experiment.Mice))  + " mice distributed among " + str(len(experiment.Groups)) + " groups in " + str(len(experiment.Cages)) + " cages.")

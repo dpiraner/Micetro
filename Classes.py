@@ -11,12 +11,16 @@ class Tumor:
         self.TimePoints = []
         
 class TumorTimePoint:
-            def __init__(self, date, startDate):
-                self.Date = date
-                self.Elapsed = date - startDate
-                self.Axis1 = None
-                self.Axis2 = None
-                self.Volume = None
+        def __init__(self, date, startDate):
+            self.Date = date
+            self.Elapsed = date - startDate
+            self.Nodes = []
+            self.Volume = None
+
+class TumorNode:
+    def __init__(self, ax1, ax2):
+        self.Ax1s1 = ax1
+        self.Axis2 = ax2
 
 class OtherMeasurement:
     def __init__(self, label):
@@ -65,3 +69,4 @@ class Experiment:
         self.TreatmentDate = None
         self.StartFrom = "treatment"
         self.StartDate = None
+        self.EndDate = None

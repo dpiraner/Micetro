@@ -35,23 +35,33 @@ def GetMouseNamesByGroup(experiment):
             names.append(str(group.Label) + ": " + str(mouse.Label))
     return names
 
-def GetTumorMeasurement(ax1, ax2, tumorVolumeFormula):
-    
-    if not Auxil.IsNumeric(ax1) or not Auxil.IsNumeric(ax2) or math.isnan(ax1) or math.isnan(ax2):
-        return None
+def GetTumorMeasurement(timePoint, tumorVolumeFormula):
     
     vol = 0
-    if tumorVolumeFormula == "(L x W^2) / 2":
-        L = max(ax1, ax2)
-        W = min(ax1, ax2)
-        vol = math.pow(W, 2) * L * 0.5
-    return vol
+    foundValidMeasurement = False
+    
+    for node in timePoint.Nodes:
+        ax1 = node.Ax1s1
+        ax2 = node.Axis2
+        
+        if Auxil.IsNumeric(ax1) and Auxil.IsNumeric(ax2) and not math.isnan(ax1) and not math.isnan(ax2):
+            foundValidMeasurement = True
+            
+            if tumorVolumeFormula == "(L x W^2) / 2":
+                L = max(ax1, ax2)
+                W = min(ax1, ax2)
+                vol += math.pow(W, 2) * L * 0.5
+
+    if foundValidMeasurement:
+        return vol
+    else:
+        return None
 
 def ComputeTumorVolumes(experiment, tumorVolumeFormula):
     for mouse in experiment.Mice:
         for tumor in mouse.Tumors:
             for timePoint in tumor.TimePoints:
-                timePoint.Volume = GetTumorMeasurement(timePoint.Axis1, timePoint.Axis2, tumorVolumeFormula)
+                timePoint.Volume = GetTumorMeasurement(timePoint, tumorVolumeFormula)
 
 def GetTumorMeasurementAtTimePoint(tumor, timePoint):
     for tp in tumor.TimePoints:
@@ -92,4 +102,3 @@ def GetMaxTumorMeasurement(experiment, tumorLabel):
                     if tp.Volume is not None and tp.Volume > maxVol:
                         maxVol = tp.Volume
     return maxVol    
-                        

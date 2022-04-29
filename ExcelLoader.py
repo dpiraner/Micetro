@@ -7,7 +7,7 @@ Created on Thu Apr 21 13:58:36 2022
 
 import glob, os
 import pandas as pd
-from Classes import ExcelSheet, Experiment, TumorTimePoint, OtherMeasurementTimePoint
+from Classes import ExcelSheet, Experiment, TumorTimePoint, TumorNode, OtherMeasurementTimePoint
 import Auxil
 from pathlib import Path
 import math
@@ -29,15 +29,54 @@ def LoadExcelFilesFromFolder(currentDir):
 
 
 class TumorMeasurementLocation:
-    def __init__(self, ax1, ax2, name):
-        self.Col_Ax1 = ax1
-        self.Col_Ax2 = ax2
+    def __init__(self, name):
+        self.NodeColumns = []
         self.Name = name
+        
+class NodeColumnPair:
+    def __init__(self, col_Ax1, col_Ax2):
+        self.Col_Ax1 = col_Ax1
+        self.Col_Ax2 = col_Ax2
         
 class OtherDataLocation:
     def __init__(self, name, column):
         self.Name = name
         self.Column = column
+        
+def GetTumorMeasurementLocation(tumorLabel, cols_Tumors):
+    for tumorMeasurementLocation in cols_Tumors:
+        if tumorMeasurementLocation.Name == tumorLabel:
+            return tumorMeasurementLocation
+    
+    newTML = TumorMeasurementLocation(tumorLabel)
+    cols_Tumors.append(newTML)
+    return newTML
+
+def IsAxis(string, num):
+    validStrs = [
+        'Axis' + str(num),
+        'axis' + str(num),
+        '+ Axis' + str(num),
+        '+ axis' + str(num),
+        'Additional Axis' + str(num),
+        'additional axis' + str(num),
+        'Extra Axis' + str(num),
+        'extra axis' + str(num),
+        
+        'Axis' + ' ' + str(num),
+        'axis' + ' ' + str(num),
+        '+ Axis' + ' ' + str(num),
+        '+ axis' + ' ' + str(num),
+        'Additional Axis' + ' ' + str(num),
+        'additional axis' + ' ' + str(num),
+        'Extra Axis' + ' ' + str(num),
+        'extra axis' + ' ' + str(num)
+        ]
+    
+    if string.strip() in validStrs:
+        return True
+    else:
+        return False
 
 def ParseExcelMeasurements(measurements, experiment):
     for measurementSession in measurements:
@@ -69,10 +108,9 @@ def ParseExcelMeasurements(measurements, experiment):
                 col_GroupID = colNum
             elif header.startswith("Animal"):
                 col_AnimalID = colNum
-            elif header.startswith("Axis 1"):
-                if columnHeaders[colNum + 1].startswith("Axis 2"):
-                    tumorCols = TumorMeasurementLocation(colNum, colNum + 1, superHeaders[colNum])
-                    cols_Tumors.append(tumorCols)
+            elif IsAxis(header, 1) and IsAxis(columnHeaders[colNum + 1], 2):
+                tumorLoc = GetTumorMeasurementLocation(superHeaders[colNum], cols_Tumors)
+                tumorLoc.NodeColumns.append(NodeColumnPair(colNum, colNum + 1))
             else:
                 otherData = OtherDataLocation(header, colNum)
                 cols_Others.append(otherData)
@@ -100,8 +138,9 @@ def ParseExcelMeasurements(measurements, experiment):
             for tumorData in cols_Tumors:
                 tumor = Auxil.GetOrCreateTumor(mouse, tumorData.Name)
                 timepoint = TumorTimePoint(measurementSession.Date, experiment.StartDate)
-                timepoint.Axis1 = row[tumorData.Col_Ax1]
-                timepoint.Axis2 = row[tumorData.Col_Ax2]
+                for nodeColumnPair in tumorData.NodeColumns:
+                    newNode = TumorNode(row[nodeColumnPair.Col_Ax1], row[nodeColumnPair.Col_Ax2])
+                    timepoint.Nodes.append(newNode)
                 tumor.TimePoints.append(timepoint)
             
             for otherData in cols_Others:

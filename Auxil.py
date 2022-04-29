@@ -126,5 +126,20 @@ def GetOrCreateOtherMeasurement(mouse, measurementName):
     mouse.OtherMeasurements.append(newMeasurement)
     return newMeasurement
 
-def LoadExptInfo():
-    pass
+def GetExperimentBoundDates(experiment, excelMeasurements):   
+    if len(excelMeasurements) == 0:
+        return
+    
+    startDate = excelMeasurements[0].Date
+    endDate = excelMeasurements[0].Date
+    for m in excelMeasurements:
+        if m.Date < startDate:
+            startDate = m.Date
+        if m.Date > endDate:
+            endDate = m.Date
+    
+    if experiment.StartDate == None:
+        experiment.StartDate = startDate
+    
+    experiment.EndDate = endDate
+    return

@@ -35,8 +35,9 @@ def PlotTumors(experiment, workbook):
             sheetRow, sheetColumn = WriteDataToSheet(rawMeasurements, worksheet, sheetRow, sheetColumn)
             
             #plot spider charts
+            maxX = (experiment.EndDate - experiment.StartDate).days
             maxY = DataSelector.GetMaxTumorMeasurement(experiment, tumorLabel)
-            PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, GetCategoryLengths(experiment.Groups), GetGroupNames(experiment.Groups), 'scatter', "Day", "Tumor volume (mm3)", "Group ", maxY)
+            PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, GetCategoryLengths(experiment.Groups), GetGroupNames(experiment.Groups), 'scatter', "Day", "Tumor volume (mm3)", "Group ", maxX, maxY)
         return rawMeasurements
 
 
@@ -75,7 +76,7 @@ def RoundOrdinateAxisMax(x):
         return int(math.ceil(x / 1000.0)) * 1000
         
 
-def PlotChartsFromRawData(workbook, worksheet, headerRow, dataStartRow, dataEndRow, abscissaColumn, dataStartColumn, dataEndColumn, categoryLengths, categoryNames, chartType, xName, yName, titlePrefix, maxY): # designed to be arbitrary between groups and cages. categoryLengths = number of mice in each group or cage
+def PlotChartsFromRawData(workbook, worksheet, headerRow, dataStartRow, dataEndRow, abscissaColumn, dataStartColumn, dataEndColumn, categoryLengths, categoryNames, chartType, xName, yName, titlePrefix, maxX, maxY): # designed to be arbitrary between groups and cages. categoryLengths = number of mice in each group or cage
     
     currentColumn = dataStartColumn
     
@@ -100,7 +101,9 @@ def PlotChartsFromRawData(workbook, worksheet, headerRow, dataStartRow, dataEndR
         chart.set_x_axis({
                 'name': xName, 
                 'name_font': {'name': 'arial', 'size': 11, 'bold': False}, 
-                'num_font': {'name': 'arial', 'size': 11}
+                'num_font': {'name': 'arial', 'size': 11},
+                'min': 0,
+                'max': maxX
                 })
         
         chart.set_y_axis({
