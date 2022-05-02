@@ -139,6 +139,9 @@ def GetTumorAveragesByGroup(experiment, tumorLabel, errorMode):
                      errorRow.append(statistics.pstdev(currentMeasurements))
                  elif errorMode == "SEM":
                      errorRow.append(sem(currentMeasurements))
+            else:
+                measurementRow.append(None)
+                errorRow.append(None)
         if timePointHasValues == True: #if any values were not None                
             rows.append(measurementRow + errorRow)
     return rows 

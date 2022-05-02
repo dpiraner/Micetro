@@ -9,6 +9,7 @@ import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
 from datetime import datetime
 import DataSelector
+import Auxil
 import math
 
 def PlotExperiment(experiment, settings):
@@ -39,9 +40,16 @@ def PlotTumors(experiment, workbook, errorMode):
             maxY = DataSelector.GetMaxTumorMeasurement(experiment, tumorLabel)
             PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, GetCategoryLengths(experiment.Groups), GetGroupNames(experiment.Groups), 'scatter', "Day", "Tumor volume (mm3)", "Group ", maxX, maxY)
         
+            #skip some cells to make room for charts
+            sheetRow += 16
+        
             #get and plot tumor averages
+            averagesHeaderRowIndex = sheetRow
             averagesAndErrors = DataSelector.GetTumorAveragesByGroup(experiment, tumorLabel, errorMode)
-            dbg = True
+            sheetRow, sheetColumn = WriteDataToSheet(averagesAndErrors, worksheet, sheetRow, 0)
+            
+            #plot averages with error bars
+            PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, len(experiment.Groups), GetGroupNames(experiment.Groups), 'scatter', 'Day', 'Tumor volume (mm3)', 'Tumor Growth', maxX, maxY, 0)
         
         return rawMeasurements
 
@@ -55,6 +63,8 @@ def WriteDataToSheet(data, worksheet, startRow, startColumn):
     for line in data:
         xlColumn = startColumn
         for value in line:
+            if Auxil.IsNumeric(value) and math.isnan(value):
+                value = None
             worksheet.write(xlRow, xlColumn, value)
             xlColumn += 1
             if xlColumn > columnMax:
@@ -79,14 +89,46 @@ def RoundOrdinateAxisMax(x):
         return int(math.ceil(x / 100.0)) * 100
     else:
         return int(math.ceil(x / 1000.0)) * 1000
-        
-def WriteAveragesAndErrorsByValue(workbook, worksheet, experiment, headerRow, startRow, startColumn, abscissaColumn, dataStartColumn, dataEndColumn, categoryLengths, categoryNames):
-    xlRow = startRow
-    xlColumn = startColumn
-    rowMax = startRow
-    colMax = startColumn
     
+def PlotAveragesAndErrors(workbook, worksheet, headerRow, dataStartRow, dataEndRow, abscissaColumn, dataStartColumn, dataEndColumn, categoryNames, chartType, xName, yName, title, maxX, maxY, gapColumnsBeforeErrors):
+    currentColumn = dataStartColumn
+    currentErrorColumn = dataEndColumn + 1 + gapColumnsBeforeErrors
+    abscissaStart = [dataStartRow, abscissaColumn]
+    abscissaEnd = [dataEndRow, abscissaColumn]
     
+    chart = workbook.add_chart({
+            'type': chartType, 
+            'subtype': 'straight_with_markers'
+            })
+    FormatStandardChart(chart, title, xName, yName, maxX, maxY)
+    chartWidth =  63.8 * len(categoryNames)
+    chartHeight = chartWidth / 6 * 4
+    chart.set_size({'width':chartWidth, 'height': chartHeight})
+    
+    #add series for each mouse in group or cage
+    for name in categoryNames:
+        dataStart = [dataStartRow, currentColumn]
+        dataEnd = [dataEndRow, currentColumn]
+        errorStart = [dataStartRow, currentErrorColumn]
+        errorEnd = [dataEndRow, currentErrorColumn]
+    
+        chart.add_series({
+            'categories': [worksheet.name] + abscissaStart + abscissaEnd,
+            'values': [worksheet.name] + dataStart + dataEnd,
+            'name': [worksheet.name] + [headerRow, currentColumn],
+            'marker': {'type': 'circle'},
+            'name_font': {'name': 'arial', 'size': 11},
+            'y_error_bars': {
+                'type': 'custom',
+                'plus_values': [worksheet.name] + errorStart + errorEnd,
+                'minus_values': [worksheet.name] + errorStart + errorEnd
+                }
+        })
+        currentColumn += 1
+        currentErrorColumn += 1
+    
+    #add chart to worksheet
+    worksheet.insert_chart(dataEndRow + 1, abscissaColumn + 1, chart)
 
 def PlotChartsFromRawData(workbook, worksheet, headerRow, dataStartRow, dataEndRow, abscissaColumn, dataStartColumn, dataEndColumn, categoryLengths, categoryNames, chartType, xName, yName, titlePrefix, maxX, maxY): # designed to be arbitrary between groups and cages. categoryLengths = number of mice in each group or cage
     
