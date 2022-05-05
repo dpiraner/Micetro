@@ -11,6 +11,73 @@ import statistics
 from scipy import mean
 from scipy.stats import sem
 
+def GetOtherDataLabels(experiment):
+    otherLabels = []
+    for mouse in experiment.Mice:
+        for measurement in mouse.OtherMeasurements:
+            if not measurement.Label in otherLabels:
+                otherLabels.append(measurement.Label)
+    return otherLabels
+
+def GetDataMeasurementsByGroup(experiment, dataLabel):
+    rows = []
+    
+    timePoints, elapsed = GetDataTimepoints(experiment, dataLabel)
+    
+    header = ["Measurement Date", "Elapsed Time"]
+    header = header + GetMouseNamesByGroup(experiment)    
+    rows.append(header)
+
+    for i in range(len(timePoints)):
+        measurementRow = [timePoints[i], elapsed[i]]
+        hasValues = False
+        for group in experiment.Groups:
+            for mouse in group.Mice:
+                for dataSet in mouse.OtherMeasurements:
+                    if dataSet.Label == dataLabel:
+                        measurement = GetDataMeasurementAtTimePoint(dataSet, timePoints[i])
+                        measurementRow.append(measurement)
+                        if measurement is not None:
+                            hasValues = True
+        if hasValues == True: #if any values were not None                
+            rows.append(measurementRow)
+    return rows
+
+def GetDataMeasurementAtTimePoint(dataSet, timePoint):
+    for tp in dataSet.TimePoints:
+        if tp.Date == timePoint:
+            return tp.Value
+    return None
+
+def GetDataTimepoints(experiment, dataLabel):
+    timePoints = []
+    elapsed = []
+    for mouse in experiment.Mice:
+        for otherData in mouse.OtherMeasurements:
+            if  otherData.Label == dataLabel:
+                for timePoint in otherData.TimePoints:
+                    if not timePoint.Elapsed in elapsed:
+                        timePoints.append(timePoint.Date)
+                        elapsed.append(timePoint.Elapsed)
+    return timePoints, elapsed
+
+def GetDataBounds(experiment, dataLabel):
+    maxData = 0
+    minData = 0
+    firstData = True
+    for mouse in experiment.Mice:
+        for dataSet in mouse.OtherMeasurements:
+            if dataSet.Label == dataLabel:
+                for tp in dataSet.TimePoints:
+                    if tp.Value is not None and tp.Value > maxData:
+                        maxData = tp.Value
+                    if firstData == True:
+                        minData = tp.Value
+                        firstData  = False
+                    elif tp.Value < minData:
+                        minData = tp.Value
+    return minData, maxData  
+
 def GetTumorLabels(experiment):
     tumorLabels = []
     for mouse in experiment.Mice:

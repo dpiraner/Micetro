@@ -58,6 +58,8 @@ def IsAxis(string, num):
         'axis' + str(num),
         '+ Axis' + str(num),
         '+ axis' + str(num),
+        '+Axis' + str(num),
+        '+axis' + str(num),
         'Additional Axis' + str(num),
         'additional axis' + str(num),
         'Extra Axis' + str(num),
@@ -67,6 +69,8 @@ def IsAxis(string, num):
         'axis' + ' ' + str(num),
         '+ Axis' + ' ' + str(num),
         '+ axis' + ' ' + str(num),
+        '+Axis' + ' ' + str(num),
+        '+axis' + ' ' + str(num),
         'Additional Axis' + ' ' + str(num),
         'additional axis' + ' ' + str(num),
         'Extra Axis' + ' ' + str(num),
@@ -96,7 +100,7 @@ def ParseExcelMeasurements(measurements, experiment):
         colNum = -1
         for header in columnHeaders:
             colNum += 1
-            if not isinstance(header, str) or header.startswith("*") or header.startswith("Axis 2"):
+            if not isinstance(header, str) or header.startswith("*") or IsAxis(header, 2):
                 continue
             elif header.startswith("Cage #"):
                 col_CageNum = colNum
@@ -108,7 +112,7 @@ def ParseExcelMeasurements(measurements, experiment):
                 col_GroupID = colNum
             elif header.startswith("Animal"):
                 col_AnimalID = colNum
-            elif IsAxis(header, 1) and IsAxis(columnHeaders[colNum + 1], 2):
+            elif IsAxis(header, 1) and colNum < len(columnHeaders) - 1 and IsAxis(columnHeaders[colNum + 1], 2):
                 tumorLoc = GetTumorMeasurementLocation(superHeaders[colNum], cols_Tumors)
                 tumorLoc.NodeColumns.append(NodeColumnPair(colNum, colNum + 1))
             else:
