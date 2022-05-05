@@ -72,6 +72,16 @@ def PlotTumors(experiment, workbook, errorMode):
         minY = RoundOrdinateAxisMin(minY)
         PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, GetCategoryLengths(experiment.Groups), GetGroupNames(experiment.Groups), 'scatter', "Day", dataLabel, "Group ", 0, maxX, minY, maxY)
     
+        #skip some cells to make room for charts
+        sheetRow += 16
+    
+        #get and plot tumor averages
+        averagesHeaderRowIndex = sheetRow
+        averagesAndErrors = DataSelector.GetDataSetAveragesByGroup(experiment, dataLabel, errorMode)
+        sheetRow, sheetColumn = WriteDataToSheet(averagesAndErrors, worksheet, sheetRow, 0)
+        
+        #plot averages with error bars
+        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, len(experiment.Groups) + 1, GetGroupNames(experiment.Groups), 'scatter', 'Day', dataLabel, dataLabel, 0, maxX, 0, maxY, 0)
     return rawMeasurements
 
 def WriteDataToSheet(data, worksheet, startRow, startColumn):

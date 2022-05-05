@@ -61,6 +61,46 @@ def GetDataTimepoints(experiment, dataLabel):
                         elapsed.append(timePoint.Elapsed)
     return timePoints, elapsed
 
+def GetDataSetAveragesByGroup(experiment, dataLabel, errorMode):
+    rows = []
+    
+    timePoints, elapsed = GetDataTimepoints(experiment, dataLabel)
+    
+    header = ["Measurement Date", "Elapsed Time"]
+    for group in experiment.Groups:
+        header.append(group.Label)
+    for group in experiment.Groups:
+        header.append(errorMode + " " + str(group.Label))
+    rows.append(header)
+    
+    for i in range(len(timePoints)):
+        measurementRow = [str(timePoints[i]), elapsed[i]]
+        errorRow = []
+        timePointHasValues = False
+        groupHasValues = False
+        for group in experiment.Groups:
+            currentMeasurements = []
+            for mouse in group.Mice:
+                for dataSet in mouse.OtherMeasurements:
+                    if dataSet.Label == dataLabel:
+                        measurement = GetDataMeasurementAtTimePoint(dataSet, timePoints[i])
+                        if measurement is not None and not math.isnan(measurement):
+                            currentMeasurements.append(measurement)
+                            timePointHasValues = True
+                            groupHasValues = True
+            if groupHasValues:
+                 measurementRow.append(mean(currentMeasurements))
+                 if errorMode == "StDev":
+                     errorRow.append(statistics.pstdev(currentMeasurements))
+                 elif errorMode == "SEM":
+                     errorRow.append(sem(currentMeasurements))
+            else:
+                measurementRow.append(None)
+                errorRow.append(None)
+        if timePointHasValues == True: #if any values were not None                
+            rows.append(measurementRow + errorRow)
+    return rows 
+
 def GetDataBounds(experiment, dataLabel):
     maxData = 0
     minData = 0
