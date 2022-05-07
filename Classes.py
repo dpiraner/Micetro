@@ -19,7 +19,7 @@ class TumorTimePoint:
 
 class TumorNode:
     def __init__(self, ax1, ax2):
-        self.Ax1s1 = ax1
+        self.Axis1 = ax1
         self.Axis2 = ax2
 
 class OtherMeasurement:
@@ -45,6 +45,7 @@ class Mouse:
 class Group:
     def __init__(self, label):
         self.Label = label
+        self.OrigLabel = label
         self.Mice = []
         
 class Cage:

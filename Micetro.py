@@ -53,7 +53,6 @@ def RunAnalysis():
     Auxil.GetExperimentBoundDates(experiment, measurements) 
     experiment = ExcelLoader.ParseExcelMeasurements(measurements, experiment)
     
-    experiment.Groups.sort(key = lambda x: x.Label)
     Auxil.AliasGroupLabels(experiment, groupAliases)
     
     print("Loaded experiment with " + str(len(experiment.Mice))  + " mice distributed among " + str(len(experiment.Groups)) + " groups in " + str(len(experiment.Cages)) + " cages.")

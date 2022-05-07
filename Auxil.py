@@ -116,9 +116,9 @@ def GetOrCreateMouse(label, cage, groupName, experiment):
     for mouse in cage.Mice:
         if mouse.Label == label:
             return mouse
-    newMouse = Classes.Mouse(label, cage, groupName)
-    cage.Mice.append(newMouse)
     currentGroup = GetOrCreateGroup(groupName, experiment)
+    newMouse = Classes.Mouse(label, cage, currentGroup)
+    cage.Mice.append(newMouse)
     currentGroup.Mice.append(newMouse)
     experiment.Mice.append(newMouse)
     
@@ -164,3 +164,48 @@ def GetExperimentBoundDates(experiment, excelMeasurements):
         experiment.MeasurementElapsedDays.append(elapsed)
     
     return
+
+def CloneExperiment(experiment):
+    clonedExperiment = Classes.Experiment()
+    clonedExperiment.ChallengeDate = experiment.ChallengeDate
+    clonedExperiment.EndDate = experiment.EndDate
+    clonedExperiment.MeasurementDates = experiment.MeasurementDates
+    clonedExperiment.MeasurementElapsedDays = experiment.MeasurementElapsedDays
+    clonedExperiment.StartDate = experiment.StartDate
+    clonedExperiment.StartFrom = experiment.StartFrom
+    clonedExperiment.TreatmentDate = experiment.TreatmentDate
+
+    for cage in experiment.Cages:
+        for mouse in cage.Mice:
+            sourceCage = GetOrCreateCage(clonedExperiment.Cages, mouse.Cage.Number, mouse.Cage.ID, mouse.Cage.OrigID)
+            clonedMouse = GetOrCreateMouse(mouse.Label, sourceCage, mouse.Group.Label, clonedExperiment)
+            
+            for tumor in mouse.Tumors:
+                clonedTumor = Classes.Tumor(tumor.Label)
+                for timepoint in tumor.TimePoints:
+                    clonedTimepointTumor = Classes.TumorTimePoint(timepoint.Date, experiment.StartDate)
+                    clonedTimepointTumor.Volume = timepoint.Volume
+                    for node in timepoint.Nodes:
+                        clonedNode = Classes.TumorNode(node.Axis1, node.Axis2)
+                        clonedTimepointTumor.Nodes.append(clonedNode)
+                    clonedTumor.TimePoints.append(clonedTimepointTumor)
+                clonedMouse.Tumors.append(clonedTumor)
+            
+            for dataSet in mouse.OtherMeasurements:
+                clonedDataSet = Classes.OtherMeasurement(dataSet.Label)
+                for timepoint in dataSet.TimePoints:
+                    clonedTimepointData = Classes.OtherMeasurementTimePoint(timepoint.Date, experiment.StartDate, timepoint.Value)
+                    clonedDataSet.TimePoints.append(clonedTimepointData)
+                clonedMouse.OtherMeasurements.append(clonedDataSet)
+                
+            for group in clonedExperiment.Groups:
+                UpdateGroupOrigID(group, experiment.Groups)
+                 
+            clonedExperiment.Groups.sort(key = lambda x: x.OrigLabel)
+    return clonedExperiment
+
+def UpdateGroupOrigID(group, origGroups):
+    for origGroup in origGroups:
+        if group.Label == origGroup.Label:
+            group.OrigLabel = origGroup.OrigLabel
+            return

@@ -8,6 +8,7 @@ Created on Mon Apr 25 19:39:45 2022
 import math
 import Auxil
 import statistics
+import Classes
 from scipy import mean
 from scipy.stats import sem
 
@@ -29,7 +30,7 @@ def GetDataMeasurementsByGroup(experiment, dataLabel):
     rows.append(header)
 
     for i in range(len(timePoints)):
-        measurementRow = [timePoints[i], elapsed[i]]
+        measurementRow = [str(timePoints[i]), elapsed[i]]
         hasValues = False
         for group in experiment.Groups:
             for mouse in group.Mice:
@@ -151,7 +152,7 @@ def GetTumorMeasurement(timePoint, tumorVolumeFormula):
     foundValidMeasurement = False
     
     for node in timePoint.Nodes:
-        ax1 = node.Ax1s1
+        ax1 = node.Axis1
         ax2 = node.Axis2
         
         if Auxil.IsNumeric(ax1) and Auxil.IsNumeric(ax2) and not math.isnan(ax1) and not math.isnan(ax2):
@@ -253,4 +254,28 @@ def GetTumorAveragesByGroup(experiment, tumorLabel, errorMode):
             rows.append(measurementRow + errorRow)
     return rows 
     
+def AsPercentageOfFirst(experiment):
     
+    clonedExperiment = Auxil.CloneExperiment(experiment)
+    
+    for mouse in clonedExperiment.Mice:        
+        for tumor in mouse.Tumors:
+            normValueFound = False
+            normValue = 1
+            for timepoint in tumor.TimePoints:
+                if not normValueFound and timepoint.Volume is not None and not math.isnan(timepoint.Volume):
+                    normValue = timepoint.Volume
+                    normValueFound = True
+                if timepoint.Volume is not None and not math.isnan(timepoint.Volume):
+                    timepoint.Volume = (timepoint.Volume - normValue) / normValue * 100
+    
+        for dataset in mouse.OtherMeasurements:
+            normValueFound = False
+            normValue = 1
+            for timepoint in dataset.TimePoints:
+                if not normValueFound and timepoint.Value is not None and not math.isnan(timepoint.Value):
+                    normValue = timepoint.Value
+                    normValueFound = True
+                if timepoint.Value is not None and not math.isnan(timepoint.Value):
+                    timepoint.Value = (timepoint.Value - normValue) / normValue * 100
+    return clonedExperiment
