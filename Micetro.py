@@ -43,7 +43,7 @@ settings = {
     'metricType': "Formula",
     'tumorVolumeFormula': "(L x W^2) / 2"
     }
-settingsfile = 'settings.pk'   
+settingsfile = 'micetro.pk'   
 
 
 def RunAnalysis():
