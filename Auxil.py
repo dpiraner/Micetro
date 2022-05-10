@@ -8,6 +8,7 @@ Created on Thu Apr 21 15:52:12 2022
 import datetime
 import Classes
 import os
+from enum import Enum
 
 def StringToDate(dateStr, sepChar):
     split = dateStr.split(sepChar)
@@ -201,7 +202,8 @@ def CloneExperiment(experiment):
             for group in clonedExperiment.Groups:
                 UpdateGroupOrigID(group, experiment.Groups)
                  
-            clonedExperiment.Groups.sort(key = lambda x: x.OrigLabel)
+    if GroupNamesAreNumeric(clonedExperiment, GroupLabelType.OrigLabel):
+        clonedExperiment.Groups.sort(key = lambda x: x.OrigLabel)
     return clonedExperiment
 
 def UpdateGroupOrigID(group, origGroups):
@@ -209,3 +211,15 @@ def UpdateGroupOrigID(group, origGroups):
         if group.Label == origGroup.Label:
             group.OrigLabel = origGroup.OrigLabel
             return
+        
+def GroupNamesAreNumeric(experiment, whichLabel):
+    for group in experiment.Groups:
+        if whichLabel == GroupLabelType.Label and not IsNumeric(group.Label):
+            return False
+        elif whichLabel == GroupLabelType.OrigLabel and not IsNumeric(group.OrigLabel):
+            return False
+    return True
+
+class GroupLabelType(Enum):
+    Label = 1
+    OrigLabel = 2

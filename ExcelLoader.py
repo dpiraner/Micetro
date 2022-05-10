@@ -152,5 +152,6 @@ def ParseExcelMeasurements(measurements, experiment):
                 timepoint = OtherMeasurementTimePoint(measurementSession.Date, experiment.StartDate, row[otherData.Column])
                 otherMeasurement.TimePoints.append(timepoint)
           
-            experiment.Groups.sort(key = lambda x: x.Label)
+    if Auxil.GroupNamesAreNumeric(experiment, Auxil.GroupLabelType.Label):
+        experiment.Groups.sort(key = lambda x: x.Label)
     return experiment

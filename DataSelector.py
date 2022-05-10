@@ -190,7 +190,7 @@ def GetTumorMeasurementsByGroup(experiment, tumorLabel):
     rows.append(header)
 
     for i in range(len(timePoints)):
-        measurementRow = [timePoints[i], elapsed[i]]
+        measurementRow = [str(timePoints[i]), elapsed[i]]
         hasValues = False
         for group in experiment.Groups:
             for mouse in group.Mice:
@@ -267,7 +267,10 @@ def AsPercentageOfFirst(experiment):
                     normValue = timepoint.Volume
                     normValueFound = True
                 if timepoint.Volume is not None and not math.isnan(timepoint.Volume):
-                    timepoint.Volume = (timepoint.Volume - normValue) / normValue * 100
+                    if normValue != 0:
+                        timepoint.Volume = (timepoint.Volume - normValue) / normValue * 100
+                    else:
+                        timepoint.Volume = math.nan
     
         for dataset in mouse.OtherMeasurements:
             normValueFound = False
@@ -277,5 +280,8 @@ def AsPercentageOfFirst(experiment):
                     normValue = timepoint.Value
                     normValueFound = True
                 if timepoint.Value is not None and not math.isnan(timepoint.Value):
-                    timepoint.Value = (timepoint.Value - normValue) / normValue * 100
+                    if normValue != 0:
+                        timepoint.Value = (timepoint.Value - normValue) / normValue * 100
+                    else:
+                        timepoint.Volume = math.nan
     return clonedExperiment

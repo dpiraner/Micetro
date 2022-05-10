@@ -20,6 +20,7 @@ def PlotExperiment(experiment, settings):
     debug = PlotTumors(experiment, workbook, settings['errorType'])
     
     workbook.close()
+    print("Wrote output to " + outputName)
     return debug
 
 def PlotTumors(experiment, workbook, errorMode):  
@@ -206,9 +207,14 @@ def RoundOrdinateAxisMin(x):
     if x < 0:
         scalar = -1
         x = abs(x)
+    elif x == 0: return 0
     
     while True:
-        floorDecade = math.pow(10, i)
+        try:
+            floorDecade = math.pow(10, i)
+        except OverflowError as err:
+            print ('Error calculating min bound for ' + str(-1 * x) + ': Overflowed after ', i, err)
+            break
         if x > floorDecade:
             if i == 1 and scalar == 1: 
                 return 0
