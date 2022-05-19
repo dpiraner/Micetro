@@ -8,6 +8,7 @@ Created on Thu Apr 21 15:52:12 2022
 import datetime
 import Classes
 import os
+import math
 from enum import Enum
 
 def StringToDate(dateStr, sepChar):
@@ -223,3 +224,23 @@ def GroupNamesAreNumeric(experiment, whichLabel):
 class GroupLabelType(Enum):
     Label = 1
     OrigLabel = 2
+    
+
+def RemoveEmptyMice(experiment):
+    for mouse in experiment.Mice:
+        hasData = False
+        for tumor in mouse.Tumors:
+            for tp in tumor.TimePoints:
+                for node in tp.Nodes:
+                    if not math.isnan(node.Axis1) and not math.isnan(node.Axis2):
+                        hasData = True
+                    
+        for otherData in mouse.OtherMeasurements:
+            for tp in otherData.TimePoints:
+                if not math.isnan(tp.Value):
+                    hasData = True
+        
+        if hasData == False:
+            mouse.Cage.Mice.remove(mouse)
+            mouse.Group.Mice.remove(mouse)
+            experiment.Mice.remove(mouse)

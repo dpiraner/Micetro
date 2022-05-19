@@ -52,7 +52,7 @@ def RunAnalysis():
     measurements = ExcelLoader.LoadExcelFilesFromFolder(currentDir)
     Auxil.GetExperimentBoundDates(experiment, measurements) 
     experiment = ExcelLoader.ParseExcelMeasurements(measurements, experiment)
-    
+    Auxil.RemoveEmptyMice(experiment)
     Auxil.AliasGroupLabels(experiment, groupAliases)
     
     print("Loaded experiment with " + str(len(experiment.Mice))  + " mice distributed among " + str(len(experiment.Groups)) + " groups in " + str(len(experiment.Cages)) + " cages.")
@@ -60,7 +60,7 @@ def RunAnalysis():
     print("Starting measurements from " + str(experiment.StartDate) + " (Chosen from parameter: " + str(experiment.StartFrom) + ")")
     
     DataSelector.ComputeTumorVolumes(experiment, settings['tumorVolumeFormula'])
-    debug = ExcelPlotter.PlotExperiment(experiment, settings)
+    ExcelPlotter.PlotExperiment(experiment, settings)
     print("Analyses complete!")
     
 def chooseDir(initDir):
