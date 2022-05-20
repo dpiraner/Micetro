@@ -29,6 +29,7 @@ def PlotTumors(experiment, workbook, errorMode):
     groupNames = GetGroupNames(experiment.Groups)
     numGroups = len(groupNames)
     micePerGroup = GetCategoryLengths(experiment.Groups)
+    numDays = (experiment.EndDate - experiment.StartDate).days
     
     #normalize data 
     normalizedExperiment = DataSelector.AsPercentageOfFirst(experiment)
@@ -47,9 +48,9 @@ def PlotTumors(experiment, workbook, errorMode):
         sheetRow, sheetColumn = WriteDataToSheet(rawMeasurements, worksheet, sheetRow, sheetColumn)
         
         #plot spider charts
-        maxX = (experiment.EndDate - experiment.StartDate).days
+        #maxX = (experiment.EndDate - experiment.StartDate).days
         maxY = DataSelector.GetMaxTumorMeasurement(experiment, tumorLabel)
-        PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, micePerGroup, groupNames, 'scatter', "Day", "Tumor volume (mm3)", "Group ", 0, maxX, 0, maxY)
+        PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, micePerGroup, groupNames, 'scatter', "Day", "Tumor volume (mm3)", "Group ", 0, numDays, 0, maxY)
     
         #skip some cells to make room for charts
         sheetRow += 16
@@ -60,7 +61,7 @@ def PlotTumors(experiment, workbook, errorMode):
         sheetRow, sheetColumn = WriteDataToSheet(averagesAndErrors, worksheet, sheetRow, 0)
         
         #plot averages with error bars
-        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', 'Tumor volume (mm3)', 'Tumor Growth', 0, maxX, 0, maxY, 0)
+        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', 'Tumor volume (mm3)', 'Tumor Growth', 0, numDays, 0, maxY, 0)
         
         #plot normalized spider plots
         sheetRow += round(numGroups * 2.2)
@@ -72,9 +73,9 @@ def PlotTumors(experiment, workbook, errorMode):
         sheetRow, sheetColumn = WriteDataToSheet(rawMeasurements, worksheet, sheetRow, sheetColumn)
         
         #plot spider charts
-        maxX = (experiment.EndDate - experiment.StartDate).days
+        #maxX = (experiment.EndDate - experiment.StartDate).days
         maxY = DataSelector.GetMaxTumorMeasurement(normalizedExperiment, tumorLabel)
-        PlotChartsFromRawData(workbook, worksheet, normalizedHeaderIndex, normalizedHeaderIndex + 1, sheetRow - 1, 1, 2, sheetColumn - 1, micePerGroup, groupNames, 'scatter', "Day", "% Tumor Growth", "Group ", 0, maxX, 0, maxY)
+        PlotChartsFromRawData(workbook, worksheet, normalizedHeaderIndex, normalizedHeaderIndex + 1, sheetRow - 1, 1, 2, sheetColumn - 1, micePerGroup, groupNames, 'scatter', "Day", "% Tumor Growth", "Group ", 0, numDays, 0, maxY)
 
         #skip some cells to make room for charts
         sheetRow += 16
@@ -85,7 +86,7 @@ def PlotTumors(experiment, workbook, errorMode):
         sheetRow, sheetColumn = WriteDataToSheet(averagesAndErrors, worksheet, sheetRow, 0)
         
         #plot averages with error bars
-        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', '% Tumor Growth', '% Tumor Growth', 0, maxX, 0, maxY, 0)
+        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', '% Tumor Growth', '% Tumor Growth', 0, numDays, 0, maxY, 0)
         
     #plot other data
     otherDataLabels = DataSelector.GetOtherDataLabels(experiment)
@@ -101,10 +102,10 @@ def PlotTumors(experiment, workbook, errorMode):
         sheetRow, sheetColumn = WriteDataToSheet(rawMeasurements, worksheet, sheetRow, sheetColumn)
         
         #plot spider charts
-        maxX = (experiment.EndDate - experiment.StartDate).days
+        #maxX = (experiment.EndDate - experiment.StartDate).days
         minY, maxY = DataSelector.GetDataBounds(experiment, dataLabel)
         minY = RoundOrdinateAxisMin(minY)
-        PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, micePerGroup, groupNames, 'scatter', "Day", dataLabel, "Group ", 0, maxX, minY, maxY)
+        PlotChartsFromRawData(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, micePerGroup, groupNames, 'scatter', "Day", dataLabel, "Group ", 0, numDays, minY, maxY)
     
         #skip some cells to make room for charts
         sheetRow += 16
@@ -115,7 +116,7 @@ def PlotTumors(experiment, workbook, errorMode):
         sheetRow, sheetColumn = WriteDataToSheet(averagesAndErrors, worksheet, sheetRow, 0)
         
         #plot averages with error bars
-        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', dataLabel, dataLabel, 0, maxX, 0, maxY, 0)
+        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', dataLabel, dataLabel, 0, numDays, 0, maxY, 0)
         
         #plot normalized spider plots
         sheetRow += round(numGroups * 2.2)
@@ -127,10 +128,10 @@ def PlotTumors(experiment, workbook, errorMode):
         sheetRow, sheetColumn = WriteDataToSheet(rawMeasurements, worksheet, sheetRow, sheetColumn)
         
         #plot spider charts
-        maxX = (experiment.EndDate - experiment.StartDate).days
+        #maxX = (experiment.EndDate - experiment.StartDate).days
         minY, maxY = DataSelector.GetDataBounds(normalizedExperiment, dataLabel)
         minY = RoundOrdinateAxisMin(minY)
-        PlotChartsFromRawData(workbook, worksheet, normalizedHeaderIndex, normalizedHeaderIndex + 1, sheetRow - 1, 1, 2, sheetColumn - 1, micePerGroup, groupNames, 'scatter', "Day", dataLabel + " (% Change)", "Group ", 0, maxX, minY, maxY)
+        PlotChartsFromRawData(workbook, worksheet, normalizedHeaderIndex, normalizedHeaderIndex + 1, sheetRow - 1, 1, 2, sheetColumn - 1, micePerGroup, groupNames, 'scatter', "Day", dataLabel + " (% Change)", "Group ", 0, numDays, minY, maxY)
     
         #skip some cells to make room for charts
         sheetRow += 16
@@ -141,10 +142,15 @@ def PlotTumors(experiment, workbook, errorMode):
         sheetRow, sheetColumn = WriteDataToSheet(averagesAndErrors, worksheet, sheetRow, 0)
         
         #plot averages with error bars
-        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', dataLabel + " (% Change)", dataLabel + " (% Change)", 0, maxX, minY, maxY, 0)
+        PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', dataLabel + " (% Change)", dataLabel + " (% Change)", 0, numDays, minY, maxY, 0)
         
     #Plot survival
     survivalData = DataSelector.GetSurvivalData(experiment)
+    worksheet = workbook.add_worksheet("Survival")
+    sheetRow = 0
+    sheetColumn = 0
+    sheetRow, sheetColumn = WriteDataToSheet(survivalData, worksheet, sheetRow, sheetColumn)
+    PlotSurvivalCurves(workbook, worksheet, 0, 1, sheetRow - 1, 1, 2, sheetColumn - 1, groupNames, 'Survival', 0, numDays, "Day" )    
     
     return rawMeasurements
 
@@ -307,8 +313,6 @@ def PlotChartsFromRawData(workbook, worksheet, headerRow, dataStartRow, dataEndR
         worksheet.insert_chart(dataEndRow + 1, categoryStartColumn, chart)
     return
 
-
-
 def FormatStandardChart(chart, title, xName, yName, minX, maxX, minY, maxY):
     chart.set_title({
         'name': title,
@@ -341,5 +345,36 @@ def FormatStandardChart(chart, title, xName, yName, minX, maxX, minY, maxY):
             'min': minY
             })
     return
+
+def PlotSurvivalCurves(workbook, worksheet, headerRow, dataStartRow, dataEndRow, abscissaColumn, dataStartColumn, dataEndColumn, categoryNames, title, minX, maxX, xName):
+    currentColumn = dataStartColumn
+    abscissaStart = [dataStartRow, abscissaColumn]
+    abscissaEnd = [dataEndRow, abscissaColumn]
+    
+    chart = workbook.add_chart({
+            'type': 'scatter', 
+            'subtype': 'straight_without_markers'
+            })
+    FormatStandardChart(chart, "Survival", xName, 'Fraction Live', minX, maxX, 0, 1)
+    chartWidth =  63.8 * len(categoryNames)
+    chartHeight = chartWidth / 6 * 4
+    chart.set_size({'width':chartWidth, 'height': chartHeight})
+    
+    #add series for each mouse in group or cage
+    for name in categoryNames:
+        dataStart = [dataStartRow, currentColumn]
+        dataEnd = [dataEndRow, currentColumn]
+    
+        chart.add_series({
+            'categories': [worksheet.name] + abscissaStart + abscissaEnd,
+            'values': [worksheet.name] + dataStart + dataEnd,
+            'name': [worksheet.name] + [headerRow, currentColumn],
+            'marker': {'type': 'none'},
+            'name_font': {'name': 'arial', 'size': 11},
+        })
+        currentColumn += 1
+    
+    #add chart to worksheet
+    worksheet.insert_chart(dataEndRow + 1, abscissaColumn + 1, chart)
         
         

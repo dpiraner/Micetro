@@ -38,6 +38,7 @@ def LoadExperimentInfo(experiment, currentDir):
     settingsPath = os.path.join(currentDir, "micetro.txt")
     groupAliases = {}
     deathDates = {}
+    deathDateList = []
     
     if os.path.exists(settingsPath):
         print("Found Micetro settings file.")
@@ -73,12 +74,17 @@ def LoadExperimentInfo(experiment, currentDir):
                     
                     if cageID != "" and mouseID != "" and deathDate is not None:
                         deathDates[cageID] = {}
-                        deathDates[cageID][mouseID] = deathDate         
+                        deathDates[cageID][mouseID] = deathDate
+                        deathDateList.append(deathDate)
                 
     if experiment.StartFrom == "challenge" and experiment.ChallengeDate != None:
         experiment.StartDate = experiment.ChallengeDate
     elif experiment.StartFrom == "treatment" and experiment.TreatmentDate != None:
         experiment.StartDate = experiment.TreatmentDate
+        
+    deathDateList.sort()
+    if experiment.EndDate is None or deathDateList[-1] > experiment.EndDate:
+        experiment.EndDate = deathDateList[-1]
     
     return groupAliases, deathDates
 
@@ -251,7 +257,8 @@ def GetExperimentBoundDates(experiment, excelMeasurements):
     if experiment.StartDate == None:
         experiment.StartDate = startDate
     
-    experiment.EndDate = endDate
+    if experiment.EndDate is None or endDate > experiment.EndDate: #end date might already be set from an explicit death date in the micetro.txt file
+        experiment.EndDate = endDate
     
     experiment.MeasurementDates.sort()
     for date in experiment.MeasurementDates:
