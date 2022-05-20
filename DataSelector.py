@@ -285,3 +285,78 @@ def AsPercentageOfFirst(experiment):
                     else:
                         timepoint.Volume = math.nan
     return clonedExperiment
+
+def ComputeDeathDates(experiment):
+    
+    allDates = [] 
+    
+    #first collect all measurements and fill in allDates
+    for mouse in experiment.Mice:
+        for tumor in mouse.Tumors:
+            for tp in tumor.TimePoints:
+                hasData = False
+                for node in tp.Nodes:
+                    if not math.isnan(node.Axis1) and not math.isnan(node.Axis2):
+                        hasData = True
+                        break
+                    
+                if not tp.Date in allDates:
+                    allDates.append(tp.Date)
+                
+                survivalTP = GetOrCreateSurvivalTimepoint(mouse, tp.Date, experiment.StartDate)
+                if hasData == True:
+                    survivalTP.Live = True
+                    
+        for otherData in mouse.OtherMeasurements:
+            for tp in otherData.TimePoints:
+                hasData = False
+                if not math.isnan(tp.Value):
+                    hasData = True
+                
+                if not tp.Date in allDates:
+                   allDates.append(tp.Date) 
+                   
+                survivalTP = GetOrCreateSurvivalTimepoint(mouse, tp.Date, experiment.StartDate)
+                if hasData == True:
+                    survivalTP.Live = True
+                    
+    #add manual death date
+    for mouse in experiment.Mice:
+        if mouse.DeathDate is not None and not mouse.DeathDate in allDates:
+            allDates.append(mouse.DeathDate)
+             
+    #fill in measurements if necessary
+    for mouse in experiment.Mice:
+        for date in allDates:
+            GetOrCreateSurvivalTimepoint(mouse, date, experiment.StartDate)
+            
+    #sort dates
+    for mouse in experiment.Mice:
+        mouse.Survival.sort(key = lambda x: x.Date)
+        
+    
+    #back fill live from last live date
+    for mouse in experiment.Mice:
+        isLive = False
+        for survivalTP in reversed(mouse.Survival):
+            if survivalTP.Live == True:
+                isLive = True
+            survivalTP.Live = isLive
+    
+    #if mouse has explicit death date, set that date to dead even if measurements were collected
+    for mouse in experiment.Mice:
+        if mouse.DeathDate is not None:
+            deathTimePoint = GetOrCreateSurvivalTimepoint(mouse, mouse.DeathDate, experiment.StartDate)
+            deathTimePoint.Live = False
+                
+
+def GetOrCreateSurvivalTimepoint(mouse, date, startDate):
+    for tp in mouse.Survival:
+        if tp.Date == date:
+            return tp
+    newTP = Classes.Survival(date, startDate)
+    mouse.Survival.append(newTP)
+    return newTP
+                    
+                        
+    

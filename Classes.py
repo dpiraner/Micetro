@@ -41,6 +41,13 @@ class Mouse:
         self.Cage = cage
         self.Group = group
         self.DeathDate = None
+        self.Survival = []
+        
+class Survival:
+    def __init__(self, date, startDate):
+        self.Date = date
+        self.Elapsed = date - startDate
+        self.Live = False
         
 class Group:
     def __init__(self, label):

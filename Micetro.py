@@ -48,11 +48,12 @@ settingsfile = 'micetro.pk'
 
 def RunAnalysis():
     experiment = Classes.Experiment()
-    groupAliases = Auxil.LoadExperimentInfo(experiment, currentDir)
+    groupAliases, deathDates = Auxil.LoadExperimentInfo(experiment, currentDir)
     measurements = ExcelLoader.LoadExcelFilesFromFolder(currentDir)
     Auxil.GetExperimentBoundDates(experiment, measurements) 
     experiment = ExcelLoader.ParseExcelMeasurements(measurements, experiment)
     Auxil.RemoveEmptyMice(experiment)
+    Auxil.SetExplicitDeathDates(experiment, deathDates) #should come before aliasing group labels
     Auxil.AliasGroupLabels(experiment, groupAliases)
     
     print("Loaded experiment with " + str(len(experiment.Mice))  + " mice distributed among " + str(len(experiment.Groups)) + " groups in " + str(len(experiment.Cages)) + " cages.")
@@ -60,6 +61,7 @@ def RunAnalysis():
     print("Starting measurements from " + str(experiment.StartDate) + " (Chosen from parameter: " + str(experiment.StartFrom) + ")")
     
     DataSelector.ComputeTumorVolumes(experiment, settings['tumorVolumeFormula'])
+    DataSelector.ComputeDeathDates(experiment)
     ExcelPlotter.PlotExperiment(experiment, settings)
     print("Analyses complete!")
     

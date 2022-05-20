@@ -37,6 +37,7 @@ def StrArrayToDate(arr):
 def LoadExperimentInfo(experiment, currentDir):
     settingsPath = os.path.join(currentDir, "micetro.txt")
     groupAliases = {}
+    deathDates = {}
     
     if os.path.exists(settingsPath):
         print("Found Micetro settings file.")
@@ -64,13 +65,41 @@ def LoadExperimentInfo(experiment, currentDir):
                             experiment.StartFrom = 'treatment'
                 elif len(stripped) == 3 and stripped[0] == "GroupAlias":
                     groupAliases[stripped[1]] = stripped[2]
+                elif len(stripped) == 3 and stripped[0] == "Death":
+                    target = stripped[1]
+                    cageID = GetQuotedStringAfterLabel(target, "Cage")
+                    mouseID = GetQuotedStringAfterLabel(target, "Mouse")
+                    deathDate = StrArrayToDate(stripped[2].split(' '))
+                    
+                    if cageID != "" and mouseID != "" and deathDate is not None:
+                        deathDates[cageID] = {}
+                        deathDates[cageID][mouseID] = deathDate         
                 
     if experiment.StartFrom == "challenge" and experiment.ChallengeDate != None:
         experiment.StartDate = experiment.ChallengeDate
     elif experiment.StartFrom == "treatment" and experiment.TreatmentDate != None:
         experiment.StartDate = experiment.TreatmentDate
     
-    return groupAliases
+    return groupAliases, deathDates
+
+def GetQuotedStringAfterLabel(s, label):
+    if label in s:
+        start = s.index(label) + len(label)
+        startQuoteIndex = -1
+        endQuoteIndex = -1
+        for index, char in enumerate(s):
+            if index >= start:
+                if char == '"' and startQuoteIndex == -1:
+                    startQuoteIndex = index
+                elif char == '"':
+                    endQuoteIndex = index
+                    break
+        
+        if startQuoteIndex >= 0 and endQuoteIndex > startQuoteIndex:
+            return s[startQuoteIndex + 1 : endQuoteIndex]
+    
+    return ""
+            
 
 def AliasGroupLabels(experiment, groupAliases):
     for group in experiment.Groups:
@@ -82,6 +111,70 @@ def AliasGroupLabels(experiment, groupAliases):
         origLabel = str(mouse.Group) 
         if origLabel in groupAliases:
             mouse.Group = groupAliases[origLabel]
+            
+def SetExplicitDeathDates(experiment, deathDates):
+    for cageIndicator in deathDates:
+        cage = GetCageByAny(experiment, cageIndicator)
+        if cage is not None:
+            for mouseLabel in deathDates[cageIndicator]:
+                mouse = GetMouseInCage(cage, mouseLabel)
+                if mouse is not None:
+                    mouse.DeathDate = deathDates[cageIndicator][mouseLabel]
+                else:
+                    print("Warning: could not set explicit death date - could not find mouse " + mouseLabel + " in cage " + str(cageIndicator))
+        else: 
+            print("Warning: could not set explicit death date - could not find Cage " + str(cageIndicator))
+        
+        
+def GetCageByAny(experiment, anyIndicator):
+        
+    """
+    formattedIndicator = anyIndicator
+    if isinstance(anyIndicator, int):
+        formattedIndicator = int(anyIndicator)
+        
+        for cage in experiment.Cages:
+            if isinstance(cage.Number, int) and int(cage.Number) == formattedIndicator:
+                return cage
+            if isinstance(cage.ID, int) and  int(cage.ID) == formattedIndicator:
+                return cage
+            if isinstance(cage.OrigID, int) and int(cage.OrigID) == formattedIndicator:
+                return cage
+    
+    elif isinstance(anyIndicator, float):
+        formattedIndicator = float(anyIndicator)
+        
+        for cage in experiment.Cages:
+            if isinstance(cage.Number, float) and float(cage.Number) == formattedIndicator:
+                return cage
+            if isinstance(cage.ID, float) and  float(cage.ID) == formattedIndicator:
+                return cage
+            if isinstance(cage.OrigID, float) and float(cage.OrigID) == formattedIndicator:
+                return cage
+    
+    else:
+        for cage in experiment.Cages:
+            if str(cage.Number) == str(anyIndicator):
+                return cage
+            if str(cage.(ID) == str(anyIndicator):
+                return cage
+            if str(cage.OrigID) == str(anyIndicator):
+                return cage
+            """
+    for cage in experiment.Cages:
+        if str(cage.Number) == str(anyIndicator):
+            return cage
+        if str(cage.ID) == str(anyIndicator):
+            return cage
+        if str(cage.OrigID) == str(anyIndicator):
+            return cage
+    return None
+
+def GetMouseInCage(cage, mouseLabel):
+    for mouse in cage.Mice:
+        if mouse.Label == mouseLabel:
+            return mouse
+    return None
 
 def GetSuperHeaderNames(df):
     prelim = list(df.columns)
