@@ -48,11 +48,12 @@ settingsfile = 'micetro.pk'
 
 def RunAnalysis():
     experiment = Classes.Experiment()
-    groupAliases, deathDates = Auxil.LoadExperimentInfo(experiment, currentDir)
+    groupAliases, deathDates, omittedMice = Auxil.LoadExperimentInfo(experiment, currentDir)
     measurements = ExcelLoader.LoadExcelFilesFromFolder(currentDir)
     Auxil.GetExperimentBoundDates(experiment, measurements) 
     experiment = ExcelLoader.ParseExcelMeasurements(measurements, experiment)
     Auxil.RemoveEmptyMice(experiment)
+    Auxil.RemoveOmittedMice(experiment, omittedMice)
     Auxil.SetExplicitDeathDates(experiment, deathDates) #should come before aliasing group labels
     Auxil.AliasGroupLabels(experiment, groupAliases)
     

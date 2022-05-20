@@ -39,6 +39,7 @@ def LoadExperimentInfo(experiment, currentDir):
     groupAliases = {}
     deathDates = {}
     deathDateList = []
+    omittedMice = {}
     
     if os.path.exists(settingsPath):
         print("Found Micetro settings file.")
@@ -64,8 +65,17 @@ def LoadExperimentInfo(experiment, currentDir):
                             experiment.StartFrom = "challenge"
                         else:
                             experiment.StartFrom = 'treatment'
+                    elif setting == "Ignore" or setting == "Omit" :
+                        cageID = GetQuotedStringAfterLabel(value, "Cage")
+                        mouseID = GetQuotedStringAfterLabel(value, "Mouse")
+                        if cageID != "" and mouseID != "":
+                            if not cageID in omittedMice:
+                                omittedMice[cageID] = []
+                            omittedMice[cageID].append(mouseID)
+                        
                 elif len(stripped) == 3 and stripped[0] == "GroupAlias":
                     groupAliases[stripped[1]] = stripped[2]
+                    
                 elif len(stripped) == 3 and stripped[0] == "Death":
                     target = stripped[1]
                     cageID = GetQuotedStringAfterLabel(target, "Cage")
@@ -73,7 +83,8 @@ def LoadExperimentInfo(experiment, currentDir):
                     deathDate = StrArrayToDate(stripped[2].split(' '))
                     
                     if cageID != "" and mouseID != "" and deathDate is not None:
-                        deathDates[cageID] = {}
+                        if not cageID in deathDates:
+                            deathDates[cageID] = {}
                         deathDates[cageID][mouseID] = deathDate
                         deathDateList.append(deathDate)
                 
@@ -86,7 +97,7 @@ def LoadExperimentInfo(experiment, currentDir):
     if experiment.EndDate is None or deathDateList[-1] > experiment.EndDate:
         experiment.EndDate = deathDateList[-1]
     
-    return groupAliases, deathDates
+    return groupAliases, deathDates, omittedMice
 
 def GetQuotedStringAfterLabel(s, label):
     if label in s:
@@ -341,6 +352,17 @@ def RemoveEmptyMice(experiment):
                     hasData = True
         
         if hasData == False:
-            mouse.Cage.Mice.remove(mouse)
-            mouse.Group.Mice.remove(mouse)
-            experiment.Mice.remove(mouse)
+            RemoveMouse(mouse, experiment)
+            
+def RemoveOmittedMice(experiment, omittedMice):
+    for cageID in omittedMice:
+        cage = GetCageByAny(experiment, cageID)
+        if cage is not None:
+            for mouseLabel in omittedMice[cageID]:
+                mouse = GetMouseInCage(cage, mouseLabel)
+                RemoveMouse(mouse, experiment)
+                
+def RemoveMouse(mouse, experiment):
+    mouse.Cage.Mice.remove(mouse)
+    mouse.Group.Mice.remove(mouse)
+    experiment.Mice.remove(mouse)
