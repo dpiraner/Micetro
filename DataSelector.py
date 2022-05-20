@@ -102,6 +102,56 @@ def GetDataSetAveragesByGroup(experiment, dataLabel, errorMode):
             rows.append(measurementRow + errorRow)
     return rows 
 
+def GetSurvivalData(experiment):
+    rows = []
+    
+    header = ["Measurement Date", "Elapsed Time"]
+    for group in experiment.Groups:
+        header.append(group.Label)
+    rows.append(header)
+    
+    timePoints, elapsed = GetSurvivalTimePoints(experiment)
+
+    for i in range(len(timePoints)):
+      measurementRow = [str(timePoints[i]), elapsed[i]]
+      for group in experiment.Groups:
+          measurementRow.append(GetGroupSurvivalAtTimePoint(group, timePoints[i]))
+      rows.append(measurementRow)
+      
+      if i < len(timePoints) - 1: #plot the "peek ahead" time point
+          measurementRow = [str(timePoints[i]), elapsed[i]]
+          for group in experiment.Groups:
+              measurementRow.append(GetGroupSurvivalAtTimePoint(group, timePoints[i + 1]))
+          rows.append(measurementRow)
+      
+    return rows
+
+def GetSurvivalTimePoints(experiment):    
+    timePoints = []
+    elapsed = []
+    
+    for mouse in experiment.Mice:
+        for timepoint in mouse.Survival:
+            if timepoint.Date not in timePoints:
+                timePoints.append(timepoint.Date)
+                elapsed.append(timepoint.Elapsed)
+    
+    return timePoints, elapsed
+
+def GetGroupSurvivalAtTimePoint(group, date):
+    totalMice = 0
+    liveMice = 0
+    for mouse in group.Mice:
+        for timePoint in mouse.Survival:
+            if timePoint.Date == date:
+                totalMice += 1
+                if timePoint.Live:
+                    liveMice += 1
+    if totalMice > 0:
+        return liveMice / totalMice
+    else:
+        return math.nan
+
 def GetDataBounds(experiment, dataLabel):
     maxData = 0
     minData = 0
@@ -303,7 +353,7 @@ def ComputeDeathDates(experiment):
                 if not tp.Date in allDates:
                     allDates.append(tp.Date)
                 
-                survivalTP = GetOrCreateSurvivalTimepoint(mouse, tp.Date, experiment.StartDate)
+                survivalTP, _ = GetOrCreateSurvivalTimepoint(mouse, tp.Date, experiment.StartDate)
                 if hasData == True:
                     survivalTP.Live = True
                     
@@ -316,7 +366,7 @@ def ComputeDeathDates(experiment):
                 if not tp.Date in allDates:
                    allDates.append(tp.Date) 
                    
-                survivalTP = GetOrCreateSurvivalTimepoint(mouse, tp.Date, experiment.StartDate)
+                survivalTP, _ = GetOrCreateSurvivalTimepoint(mouse, tp.Date, experiment.StartDate)
                 if hasData == True:
                     survivalTP.Live = True
                     
@@ -327,13 +377,28 @@ def ComputeDeathDates(experiment):
              
     #fill in measurements if necessary
     for mouse in experiment.Mice:
-        for date in allDates:
-            GetOrCreateSurvivalTimepoint(mouse, date, experiment.StartDate)
-            
+        for index, date in enumerate(allDates):
+            survivalPoint, isNew = GetOrCreateSurvivalTimepoint(mouse, date, experiment.StartDate)
+            if isNew:
+                survivalPoint.IsFillIn = True
+                
     #sort dates
+    allDates.sort()
     for mouse in experiment.Mice:
         mouse.Survival.sort(key = lambda x: x.Date)
         
+    #for measurements that are filled in, set them to the previous value
+    for mouse in experiment.Mice:
+        for index, date in enumerate(allDates):
+            survivalPoint, _ = GetOrCreateSurvivalTimepoint(mouse, date, experiment.StartDate)
+            
+            #if this is a new survival point, it is because a mouse died on an unscheduled measurement date. If the death date is not explicitly set, match the live value to the previous one
+            if survivalPoint.IsFillIn and index == 0:
+                survivalPoint.Live = True
+            elif survivalPoint.IsFillIn:
+                previousDate = allDates[index - 1]
+                previousPoint, _ = GetOrCreateSurvivalTimepoint(mouse, previousDate, experiment.StartDate)
+                survivalPoint.Live = previousPoint.Live
     
     #back fill live from last live date
     for mouse in experiment.Mice:
@@ -346,17 +411,17 @@ def ComputeDeathDates(experiment):
     #if mouse has explicit death date, set that date to dead even if measurements were collected
     for mouse in experiment.Mice:
         if mouse.DeathDate is not None:
-            deathTimePoint = GetOrCreateSurvivalTimepoint(mouse, mouse.DeathDate, experiment.StartDate)
+            deathTimePoint, _ = GetOrCreateSurvivalTimepoint(mouse, mouse.DeathDate, experiment.StartDate)
             deathTimePoint.Live = False
                 
 
 def GetOrCreateSurvivalTimepoint(mouse, date, startDate):
     for tp in mouse.Survival:
         if tp.Date == date:
-            return tp
+            return tp, False
     newTP = Classes.Survival(date, startDate)
     mouse.Survival.append(newTP)
-    return newTP
+    return newTP, True
                     
                         
     

@@ -48,6 +48,7 @@ class Survival:
         self.Date = date
         self.Elapsed = date - startDate
         self.Live = False
+        self.IsFillIn = False # True only if data was collected for other mice but not current mouse on a given date
         
 class Group:
     def __init__(self, label):

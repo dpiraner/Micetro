@@ -62,9 +62,6 @@ def PlotTumors(experiment, workbook, errorMode):
         #plot averages with error bars
         PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', 'Tumor volume (mm3)', 'Tumor Growth', 0, maxX, 0, maxY, 0)
         
-        
-        
-        
         #plot normalized spider plots
         sheetRow += round(numGroups * 2.2)
         normalizedHeaderIndex = sheetRow
@@ -120,10 +117,6 @@ def PlotTumors(experiment, workbook, errorMode):
         #plot averages with error bars
         PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', dataLabel, dataLabel, 0, maxX, 0, maxY, 0)
         
-        
-        
-        
-        
         #plot normalized spider plots
         sheetRow += round(numGroups * 2.2)
         normalizedHeaderIndex = sheetRow
@@ -150,7 +143,9 @@ def PlotTumors(experiment, workbook, errorMode):
         #plot averages with error bars
         PlotAveragesAndErrors(workbook, worksheet, averagesHeaderRowIndex, averagesHeaderRowIndex + 1, sheetRow - 1, 1, 2, numGroups + 1, groupNames, 'scatter', 'Day', dataLabel + " (% Change)", dataLabel + " (% Change)", 0, maxX, minY, maxY, 0)
         
-        
+    #Plot survival
+    survivalData = DataSelector.GetSurvivalData(experiment)
+    
     return rawMeasurements
 
 def WriteDataToSheet(data, worksheet, startRow, startColumn):
