@@ -94,7 +94,7 @@ def LoadExperimentInfo(experiment, currentDir):
         experiment.StartDate = experiment.TreatmentDate
         
     deathDateList.sort()
-    if experiment.EndDate is None or deathDateList[-1] > experiment.EndDate:
+    if len(deathDateList) > 0 and (experiment.EndDate is None or deathDateList[-1] > experiment.EndDate):
         experiment.EndDate = deathDateList[-1]
     
     return groupAliases, deathDates, omittedMice
