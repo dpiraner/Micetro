@@ -343,7 +343,7 @@ def RemoveEmptyMice(experiment):
         for tumor in mouse.Tumors:
             for tp in tumor.TimePoints:
                 for node in tp.Nodes:
-                    if not math.isnan(node.Axis1) and not math.isnan(node.Axis2):
+                    if IsNumeric(node.Axis1) and IsNumeric(node.Axis2) and not math.isnan(node.Axis1) and not math.isnan(node.Axis2):
                         hasData = True
                     
         for otherData in mouse.OtherMeasurements:

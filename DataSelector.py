@@ -346,7 +346,7 @@ def ComputeDeathDates(experiment):
             for tp in tumor.TimePoints:
                 hasData = False
                 for node in tp.Nodes:
-                    if not math.isnan(node.Axis1) and not math.isnan(node.Axis2):
+                    if Auxil.IsNumeric(node.Axis1) and Auxil.IsNumeric(node.Axis2) and not math.isnan(node.Axis1) and not math.isnan(node.Axis2):
                         hasData = True
                         break
                     
