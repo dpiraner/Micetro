@@ -9,6 +9,7 @@ import math
 import Auxil
 import statistics
 import Classes
+import datetime
 from scipy import mean
 from scipy.stats import sem
 
@@ -372,8 +373,12 @@ def ComputeDeathDates(experiment):
                     
     #add manual death date
     for mouse in experiment.Mice:
-        if mouse.DeathDate is not None and not mouse.DeathDate in allDates:
-            allDates.append(mouse.DeathDate)
+        if mouse.DeathDate is not None:
+            nextDeadDate = mouse.DeathDate + datetime.timedelta(days=1) # on the survival curve, the mouse needs to "start" the death date as live but "finish" it as dead, so in the survival data structure it must be alive on the death date and dead on the following day
+            if not mouse.DeathDate in allDates:
+                allDates.append(mouse.DeathDate)
+            if not nextDeadDate in allDates:
+                allDates.append(nextDeadDate)
              
     #fill in measurements if necessary
     for mouse in experiment.Mice:
@@ -408,11 +413,14 @@ def ComputeDeathDates(experiment):
                 isLive = True
             survivalTP.Live = isLive
     
-    #if mouse has explicit death date, set that date to dead even if measurements were collected
+    #if mouse has explicit death date, set that date to live even if no measurements were collected, and set the following measurement to dead
     for mouse in experiment.Mice:
         if mouse.DeathDate is not None:
             deathTimePoint, _ = GetOrCreateSurvivalTimepoint(mouse, mouse.DeathDate, experiment.StartDate)
-            deathTimePoint.Live = False
+            deathTimePoint.Live = True
+            nextDeadDate = mouse.DeathDate + datetime.timedelta(days=1)
+            nextTimePoint, _ = GetOrCreateSurvivalTimepoint(mouse, nextDeadDate, experiment.StartDate)
+            nextTimePoint.Live = False
                 
 
 def GetOrCreateSurvivalTimepoint(mouse, date, startDate):
